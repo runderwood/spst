@@ -1,4 +1,4 @@
-== spst: spatial autocorrelation, by force ==
+# spst: spatial autocorrelation, by force
 
 - for now, this only calculates the global moran's i for a shapefile
 - don't use epsg4326 (or any other unprojected crs). use something like 3785.
