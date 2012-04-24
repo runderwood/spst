@@ -53,10 +53,9 @@ int sp_ctxt_lstat(sp_ctxt* c, int l, sp_layerst* stat, const char* xcolnm) {
             fp_j = OGR_L_GetFeature(lyr, j);
             p_j = OGR_F_GetGeometryRef(fp_j);
             d = OGR_G_Distance(p_i, p_j);
-            printf("d: %f\n", d);
             *w_ij = 1.0/d;
             if(OGR_G_Equals(p_i, p_j)) *w_ij = 1.0;
-            if(d < 1.0) *w_ij = 1.0;
+            //if(d < 1.0) *w_ij = 1.0;
             OGR_F_Destroy(fp_j);
         }
         OGR_F_Destroy(fp_i);
@@ -108,19 +107,19 @@ int sp_ctxt_lstat(sp_ctxt* c, int l, sp_layerst* stat, const char* xcolnm) {
     }
 
     v_s1 *= 0.5;
-    v_s3 = ((1.0/N)*v_s3a) / pow(((1.0/N)*v_s3b), 2.0);
-    v_s4 = (N*N - 3.0*N + 3)*v_s1 - N*v_s2 + 3.0*s0*s0;
+    v_s3 = (N*v_s3a) / pow(v_s3b, 2.0); // K
+    v_s4 = (N*N - 3.0*N + 3.0)*v_s1 - N*v_s2 + 3.0*s0*s0;
     v_s5 = v_s1 - 2.0*N*v_s1 + 6.0*s0*s0;
 
-    printf("s1: %f, s2: %f, s3: %f, s4: %f, s5: %f\n", v_s1, v_s2, v_s3, v_s4, v_s5);
+    printf("s0: %f, s1: %f, s2: %f, s3: %f, s4: %f, s5: %f\n", s0, v_s1, v_s2, v_s3, v_s4, v_s5);
 
     sp_idw_dest(idw);
     free(idw);
     idw = NULL;
 
-    I = (N / s0) * (s1 / s2);
+    I = ((N / s0) * s1) / s2;
     EI = -1.0 / (N - 1.0);
-    VARI = (N*v_s4 - v_s4*v_s5) / ((N-1.0)*(N-2.0)*(N-3.0)*s0*s0);
+    VARI = (N*v_s4 - v_s3*v_s5) / ((N-1.0)*(N-2.0)*(N-3.0)*s0*s0);
 
     stat->moransi = I;
     stat->moransei = EI;
