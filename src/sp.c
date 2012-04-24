@@ -33,6 +33,7 @@ int sp_ctxt_lstat(sp_ctxt* c, int l, sp_layerst* stat, const char* xcolnm) {
     double X_sum = 0.0;
     double X_i, X_j;
     double* w_ij;
+    double d, maxd = 0.0;
     for(i=0; i<fnum; i++) {
         fp_i = OGR_L_GetFeature(lyr, i);
         p_i = OGR_F_GetGeometryRef(fp_i);
@@ -51,22 +52,27 @@ int sp_ctxt_lstat(sp_ctxt* c, int l, sp_layerst* stat, const char* xcolnm) {
             }
             fp_j = OGR_L_GetFeature(lyr, j);
             p_j = OGR_F_GetGeometryRef(fp_j);
-            *w_ij = 1.0/OGR_G_Distance(p_i, p_j);
-            if(isinf(*w_ij)) *w_ij = 0.0;
+            d = OGR_G_Distance(p_i, p_j);
+            printf("d: %f\n", d);
+            *w_ij = 1.0/d;
+            if(OGR_G_Equals(p_i, p_j)) *w_ij = 1.0;
+            if(d < 1.0) *w_ij = 1.0;
             OGR_F_Destroy(fp_j);
         }
         OGR_F_Destroy(fp_i);
     }
 
-    double s0, s1, s2, I, EI, N, X_bar;
+    double s0, s1, s2, N, X_bar, I, EI, VARI;
     N = (double)(fnum);
     X_bar = X_sum / (double)fnum;
+
+    double* w_ji;
 
     s0 = 0.0;
     s1 = 0.0;
     s2 = 0.0;
 
-    double v_s1, v_s2, v_s2_i, v_s3, v_s4, v_s5 = 0.0;
+    double v_s1, v_s2, v_s2_i, v_s3, v_s3a, v_s3b, v_s4, v_s5 = 0.0;
 
     for(i=0; i<fnum; i++) {
         fp_i = OGR_L_GetFeature(lyr, i);
@@ -95,21 +101,30 @@ int sp_ctxt_lstat(sp_ctxt* c, int l, sp_layerst* stat, const char* xcolnm) {
         }
 
         v_s2 += v_s2_i * v_s2_i;
+        v_s3a += pow((X_i - X_bar), 4.0);
+        v_s3b += pow((X_i - X_bar), 2.0);
 
         OGR_F_Destroy(fp_i);
     }
 
     v_s1 *= 0.5;
-    
+    v_s3 = ((1.0/N)*v_s3a) / pow(((1.0/N)*v_s3b), 2.0);
+    v_s4 = (N*N - 3.0*N + 3)*v_s1 - N*v_s2 + 3.0*s0*s0;
+    v_s5 = v_s1 - 2.0*N*v_s1 + 6.0*s0*s0;
+
+    printf("s1: %f, s2: %f, s3: %f, s4: %f, s5: %f\n", v_s1, v_s2, v_s3, v_s4, v_s5);
+
     sp_idw_dest(idw);
     free(idw);
     idw = NULL;
 
     I = (N / s0) * (s1 / s2);
     EI = -1.0 / (N - 1.0);
+    VARI = (N*v_s4 - v_s4*v_s5) / ((N-1.0)*(N-2.0)*(N-3.0)*s0*s0);
 
     stat->moransi = I;
     stat->moransei = EI;
+    stat->moransvari = VARI;
 
     return 0;
 }

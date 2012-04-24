@@ -23,6 +23,7 @@ typedef struct sp_idw_s {
 typedef struct sp_layerst_s {
     double moransi;
     double moransei;
+    double moransvari;
 } sp_layerst;
 
 double sp_dist(double x0, double y0, double x1, double y1);

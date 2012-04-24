@@ -37,6 +37,7 @@ int main(int argc, const char** argv) {
     printf("Spatial Autocorrelation\n==========================\n");
     printf("I:\t\t%f\n", st->moransi);
     printf("E(I):\t\t%f\n", st->moransei);
+    printf("VAR(I):\t\t%f\n", st->moransvari);
 
     free(st);
     st = NULL;
